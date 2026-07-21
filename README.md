@@ -1,12 +1,15 @@
 # Quit-Pattern-Randomizer
+
 Select scrap patches to place on a grid and randomize the result.
 
 ## Scope
+
 Assorting scrap fabric into randomized quadrants for piecing together quilt sizes.
 
-### User Experience Goal
-___
+## User Experience Goal
+
 Select scrap patches to place on a grid and randomize the result.
+
 1. number of scraps - types (integers)
 2. how many of those types
 3. input grid size (recommended based on number available)
