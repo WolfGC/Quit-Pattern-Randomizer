@@ -1,7 +1,7 @@
 // localStorage persistence for the in-progress working state and saved designs.
 // All access is wrapped so a disabled/full storage never crashes the app.
 
-import type { GridState, SavedDesign, ScrapType, ViewMode } from "../types";
+import type { GridState, SavedDesign, ScrapType } from "../types";
 
 const WORKING_KEY = "qpr:working:v1";
 const DESIGNS_KEY = "qpr:designs:v1";
@@ -10,7 +10,6 @@ const DESIGNS_KEY = "qpr:designs:v1";
 export interface WorkingState {
   scraps: ScrapType[];
   grid: GridState | null;
-  view: ViewMode;
 }
 
 function read<T>(key: string, fallback: T): T {

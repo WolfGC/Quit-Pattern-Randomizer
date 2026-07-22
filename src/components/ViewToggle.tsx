@@ -6,8 +6,8 @@ interface ViewToggleProps {
 }
 
 const VIEWS: { value: ViewMode; label: string }[] = [
-  { value: "number", label: "Number" },
   { value: "color", label: "Color" },
+  { value: "number", label: "Number" },
   { value: "greyscale", label: "Greyscale" },
   { value: "pattern", label: "Pattern" },
 ];

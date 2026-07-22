@@ -8,6 +8,7 @@ import SavedDesigns from "./components/SavedDesigns";
 import Toolbar from "./components/Toolbar";
 import ViewToggle from "./components/ViewToggle";
 import Grid from "./components/Grid";
+import SaveDesignModal from "./components/SaveDesignModal";
 
 type Screen = "setup" | "grid";
 
@@ -16,7 +17,8 @@ function App() {
   const [boot] = useState(() => storage.loadWorking());
   const [scraps, setScraps] = useState<ScrapType[]>(boot?.scraps ?? []);
   const [grid, setGrid] = useState<GridState | null>(boot?.grid ?? null);
-  const [view, setView] = useState<ViewMode>(boot?.view ?? "number");
+  // Always open in color view; the last-used view is intentionally not restored.
+  const [view, setView] = useState<ViewMode>("color");
   const [screen, setScreen] = useState<Screen>(boot?.grid ? "grid" : "setup");
   const [designs, setDesigns] = useState<SavedDesign[]>(() =>
     storage.loadDesigns(),
@@ -24,10 +26,12 @@ function App() {
   // Bumped whenever we (re)enter the setup screen, to remount BaseSetup with
   // fresh initial values.
   const [setupNonce, setSetupNonce] = useState(0);
+  // Whether the "Save design" confirmation modal is open.
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    storage.saveWorking({ scraps, grid, view });
-  }, [scraps, grid, view]);
+    storage.saveWorking({ scraps, grid });
+  }, [scraps, grid]);
 
   useEffect(() => {
     storage.saveDesigns(designs);
@@ -57,21 +61,22 @@ function App() {
   function handleNew() {
     setScraps([]);
     setGrid(null);
-    setView("number");
+    setView("color");
     setSetupNonce((n) => n + 1);
     setScreen("setup");
   }
 
-  function handleSaveDesign() {
+  function handleSaveDesign(name: string) {
     if (!grid) return;
     const design: SavedDesign = {
       id: storage.newId(),
-      name: `Design ${designs.length + 1}`,
+      name: name.trim() || `Design ${designs.length + 1}`,
       scraps,
       grid,
       savedAt: Date.now(),
     };
     setDesigns((d) => [design, ...d]);
+    setSaving(false);
   }
 
   function handleLoadDesign(id: string) {
@@ -79,7 +84,7 @@ function App() {
     if (!d) return;
     setScraps(d.scraps);
     setGrid(d.grid);
-    setView("number");
+    setView("color");
     setScreen("grid");
   }
 
@@ -128,7 +133,7 @@ function App() {
             <ViewToggle view={view} onChange={setView} />
             <Toolbar
               onRandomize={handleRandomize}
-              onSave={handleSaveDesign}
+              onSave={() => setSaving(true)}
               onEditSetup={handleEditSetup}
               onNew={handleNew}
               onExport={() => exportPdf(grid, scraps)}
@@ -136,6 +141,14 @@ function App() {
           </div>
           <Grid grid={grid} scraps={scraps} view={view} onSwap={handleSwap} />
         </div>
+      )}
+
+      {saving && (
+        <SaveDesignModal
+          defaultName={`Design ${designs.length + 1}`}
+          onConfirm={handleSaveDesign}
+          onCancel={() => setSaving(false)}
+        />
       )}
     </main>
   );
