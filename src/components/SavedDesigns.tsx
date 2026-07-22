@@ -35,7 +35,7 @@ export default function SavedDesigns({
             />
             <span className="shrink-0 text-xs text-muted">
               {d.grid.rows}&times;{d.grid.cols} &middot; {totalPatches(d.scraps)}{" "}
-              patch{totalPatches(d.scraps) === 1 ? "" : "es"}
+              block{totalPatches(d.scraps) === 1 ? "" : "s"}
             </span>
             <button
               type="button"

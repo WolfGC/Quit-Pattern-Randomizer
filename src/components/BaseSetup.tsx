@@ -78,7 +78,7 @@ export default function BaseSetup({
       <div>
         <h2 className="text-xl font-semibold text-ink">Your scraps</h2>
         <p className="mt-1 text-sm text-muted">
-          Add each scrap fabric, pick its color, and set how many patches you
+          Add each scrap fabric, pick its color, and set how many blocks you
           have.
         </p>
       </div>
@@ -117,7 +117,7 @@ export default function BaseSetup({
             />
 
             <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
-              <span>patches</span>
+              <span>blocks</span>
               <input
                 type="number"
                 min={0}
@@ -127,7 +127,7 @@ export default function BaseSetup({
                     count: Math.max(0, Math.floor(Number(e.target.value) || 0)),
                   })
                 }
-                aria-label={`patch count for scrap ${s.id}`}
+                aria-label={`block count for scrap ${s.id}`}
                 className={NUM_INPUT}
               />
             </label>
@@ -158,12 +158,12 @@ export default function BaseSetup({
         <h2 className="text-base font-semibold text-ink">Grid size</h2>
         <p className="mt-1 mb-3 text-xs text-muted">
           Recommended {recommended.rows} &times; {recommended.cols} for {total}{" "}
-          patch{total === 1 ? "" : "es"}.
+          block{total === 1 ? "" : "s"}.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <input
-            type="number"
-            min={1}
+            type="text"
+            inputMode="numeric"
             aria-label="rows"
             value={rows}
             onChange={(e) =>
@@ -175,8 +175,8 @@ export default function BaseSetup({
             &times;
           </span>
           <input
-            type="number"
-            min={1}
+            type="text"
+            inputMode="numeric"
             aria-label="columns"
             value={cols}
             onChange={(e) =>
@@ -197,7 +197,7 @@ export default function BaseSetup({
         </div>
         {total > capacity && (
           <p className="mt-2 text-xs text-accent-strong">
-            {total - capacity} patch{total - capacity === 1 ? "" : "es"} won&apos;t
+            {total - capacity} block{total - capacity === 1 ? "" : "s"} won&apos;t
             fit in a {rows}&times;{cols} grid and will be left out.
           </p>
         )}

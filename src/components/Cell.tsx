@@ -70,10 +70,10 @@ export default function Cell({
       style={style}
       aria-label={empty ? "empty cell" : `scrap ${scrapId}`}
       className={[
-        "relative aspect-square rounded-lg border select-none transition",
+        "relative aspect-square border select-none transition",
         empty
           ? "border-line/60 bg-canvas/60"
-          : "cursor-grab border-black/5 shadow-sm hover:-translate-y-0.5 hover:shadow-md active:cursor-grabbing",
+          : "cursor-grab border-black/5 hover:z-10 hover:shadow-md active:cursor-grabbing",
         showBigNumber && "bg-surface",
       ]
         .filter(Boolean)

@@ -97,11 +97,11 @@ function App() {
         <span className="inline-flex items-center gap-2 rounded-full bg-accent-soft px-3 py-1 text-xs font-medium tracking-wide text-accent-strong uppercase">
           Patchwork planner
         </span>
-        <h1 className="mt-4 text-4xl font-semibold tracking-tight text-ink">
+        <h1 className="mt-4 text-5xl font-normal tracking-normal text-ink">
           Quilt Pattern Randomizer
         </h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-          Gather your scraps, shuffle them across a grid, then nudge the patches
+          Gather your scraps, shuffle them across a grid, then nudge the blocks
           until the layout feels just right.
         </p>
       </header>

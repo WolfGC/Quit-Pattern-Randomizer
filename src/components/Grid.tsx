@@ -28,7 +28,7 @@ export default function Grid({ grid, scraps, view, onSwap }: GridProps) {
     <div
       role="grid"
       style={style}
-      className="grid gap-2 rounded-2xl border border-line bg-surface-2 p-4 shadow-inner"
+      className="grid gap-0 overflow-hidden rounded-2xl border border-line bg-surface-2 p-4 shadow-inner"
     >
       {grid.cells.map((scrapId, index) => (
         <Cell
