@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { ScrapType } from "../types";
 import { defaultSwatch } from "../lib/palette";
 import { recommendGrid } from "../lib/recommend";
-import { totalPatches } from "../lib/randomize";
 import { btnPrimary, card, field } from "../ui";
 
 interface BaseSetupProps {
@@ -14,19 +13,39 @@ interface BaseSetupProps {
   onGenerate: (scraps: ScrapType[], rows: number, cols: number) => void;
 }
 
-function newScrap(index: number): ScrapType {
+/**
+ * A scrap while it's being edited. `count` is kept as raw text so the field can
+ * be cleared completely; it's converted to a number only when generating.
+ */
+interface DraftScrap {
+  id: number;
+  label: string;
+  color: string;
+  count: string;
+}
+
+function newScrap(index: number): DraftScrap {
   const id = index + 1;
-  return {
-    id,
-    label: `Scrap ${id}`,
-    count: 1,
-    color: defaultSwatch(index),
-  };
+  return { id, label: `Scrap ${id}`, count: "1", color: defaultSwatch(index) };
+}
+
+function toDrafts(scraps: ScrapType[]): DraftScrap[] {
+  return scraps.map((s) => ({
+    id: s.id,
+    label: s.label,
+    color: s.color ?? defaultSwatch(s.id - 1),
+    count: String(s.count),
+  }));
 }
 
 /** Reassign sequential 1-based ids after add/remove so keys stay contiguous. */
-function renumber(scraps: ScrapType[]): ScrapType[] {
+function renumber(scraps: DraftScrap[]): DraftScrap[] {
   return scraps.map((s, i) => ({ ...s, id: i + 1 }));
+}
+
+/** Keep digits only, so the field accepts numbers and can be emptied. */
+function digitsOnly(value: string): string {
+  return value.replace(/\D/g, "");
 }
 
 const NUM_INPUT = `${field} w-16 text-center`;
@@ -37,25 +56,31 @@ export default function BaseSetup({
   initialCols,
   onGenerate,
 }: BaseSetupProps) {
-  const [scraps, setScraps] = useState<ScrapType[]>(() =>
-    initialScraps && initialScraps.length > 0 ? initialScraps : [newScrap(0)],
+  const [scraps, setScraps] = useState<DraftScrap[]>(() =>
+    initialScraps && initialScraps.length > 0
+      ? toDrafts(initialScraps)
+      : [newScrap(0)],
   );
-  // `null` means "follow the recommendation"; a number means the user overrode it.
-  const [rowsOverride, setRowsOverride] = useState<number | null>(
-    initialRows ?? null,
+  // Empty string = "follow the recommendation" (the field shows it, but the
+  // user can clear it and type their own value).
+  const [rowsInput, setRowsInput] = useState<string>(
+    initialRows != null ? String(initialRows) : "",
   );
-  const [colsOverride, setColsOverride] = useState<number | null>(
-    initialCols ?? null,
+  const [colsInput, setColsInput] = useState<string>(
+    initialCols != null ? String(initialCols) : "",
   );
 
-  const total = totalPatches(scraps);
+  const total = scraps.reduce((sum, s) => sum + Number(s.count || 0), 0);
   const recommended = recommendGrid(total);
 
-  const rows = rowsOverride ?? recommended.rows;
-  const cols = colsOverride ?? recommended.cols;
+  // What's displayed: the user's entry, or the recommendation when left blank.
+  const rowsStr = rowsInput === "" ? String(recommended.rows) : rowsInput;
+  const colsStr = colsInput === "" ? String(recommended.cols) : colsInput;
+  const rows = Number(rowsStr) || 0;
+  const cols = Number(colsStr) || 0;
   const capacity = rows * cols;
 
-  function updateScrap(id: number, patch: Partial<ScrapType>) {
+  function updateScrap(id: number, patch: Partial<DraftScrap>) {
     setScraps((prev) =>
       prev.map((s) => (s.id === id ? { ...s, ...patch } : s)),
     );
@@ -70,7 +95,19 @@ export default function BaseSetup({
   }
 
   function generate() {
-    onGenerate(scraps, rows, cols);
+    if (total === 0) return;
+    const next: ScrapType[] = scraps.map((s) => ({
+      id: s.id,
+      label: s.label,
+      color: s.color,
+      count: Number(s.count || 0),
+    }));
+    // Fall back to the recommendation if a dimension was left blank.
+    onGenerate(
+      next,
+      rows > 0 ? rows : recommended.rows,
+      cols > 0 ? cols : recommended.cols,
+    );
   }
 
   return (
@@ -96,11 +133,11 @@ export default function BaseSetup({
             <label
               className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full border border-line shadow-sm"
               title="Scrap color"
-              style={{ background: s.color ?? "#888888" }}
+              style={{ background: s.color }}
             >
               <input
                 type="color"
-                value={s.color ?? "#888888"}
+                value={s.color}
                 onChange={(e) => updateScrap(s.id, { color: e.target.value })}
                 className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                 aria-label={`color for scrap ${s.id}`}
@@ -119,14 +156,13 @@ export default function BaseSetup({
             <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted">
               <span>blocks</span>
               <input
-                type="number"
-                min={0}
+                type="text"
+                inputMode="numeric"
                 value={s.count}
                 onChange={(e) =>
-                  updateScrap(s.id, {
-                    count: Math.max(0, Math.floor(Number(e.target.value) || 0)),
-                  })
+                  updateScrap(s.id, { count: digitsOnly(e.target.value) })
                 }
+                placeholder="0"
                 aria-label={`block count for scrap ${s.id}`}
                 className={NUM_INPUT}
               />
@@ -165,10 +201,9 @@ export default function BaseSetup({
             type="text"
             inputMode="numeric"
             aria-label="rows"
-            value={rows}
-            onChange={(e) =>
-              setRowsOverride(Math.max(1, Math.floor(Number(e.target.value) || 1)))
-            }
+            value={rowsInput}
+            placeholder={String(recommended.rows)}
+            onChange={(e) => setRowsInput(digitsOnly(e.target.value))}
             className={NUM_INPUT}
           />
           <span className="text-muted" aria-hidden>
@@ -178,30 +213,29 @@ export default function BaseSetup({
             type="text"
             inputMode="numeric"
             aria-label="columns"
-            value={cols}
-            onChange={(e) =>
-              setColsOverride(Math.max(1, Math.floor(Number(e.target.value) || 1)))
-            }
+            value={colsInput}
+            placeholder={String(recommended.cols)}
+            onChange={(e) => setColsInput(digitsOnly(e.target.value))}
             className={NUM_INPUT}
           />
           <button
             type="button"
             onClick={() => {
-              setRowsOverride(null);
-              setColsOverride(null);
+              setRowsInput("");
+              setColsInput("");
             }}
             className="ml-1 text-xs font-medium text-accent hover:underline"
           >
             Reset to recommended
           </button>
         </div>
-        {total > capacity && (
+        {rows > 0 && cols > 0 && total > capacity && (
           <p className="mt-2 text-xs text-accent-strong">
             {total - capacity} block{total - capacity === 1 ? "" : "s"} won&apos;t
             fit in a {rows}&times;{cols} grid and will be left out.
           </p>
         )}
-        {total < capacity && (
+        {rows > 0 && cols > 0 && total < capacity && (
           <p className="mt-2 text-xs text-muted">
             {capacity - total} cell{capacity - total === 1 ? "" : "s"} will be left
             empty.

@@ -19,7 +19,8 @@ function App() {
   const [grid, setGrid] = useState<GridState | null>(boot?.grid ?? null);
   // Always open in color view; the last-used view is intentionally not restored.
   const [view, setView] = useState<ViewMode>("color");
-  const [screen, setScreen] = useState<Screen>(boot?.grid ? "grid" : "setup");
+  // Always land on the setup/input screen first, even if a prior grid was saved.
+  const [screen, setScreen] = useState<Screen>("setup");
   const [designs, setDesigns] = useState<SavedDesign[]>(() =>
     storage.loadDesigns(),
   );
